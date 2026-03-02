@@ -15,11 +15,6 @@ A Python tool for viewing and modifying SavvyCANFD USB device DEVICE ID.
 pip install python-can
 ```
 
-## Platform Support
-
-- **Windows**: Requires [SavvyCANFD Driver](https://www.peak-system.com/PCAN-USB.199.0.html)
-- **Linux**: Requires `pcan` driver module
-
 ## Usage
 
 ### Interactive Mode
