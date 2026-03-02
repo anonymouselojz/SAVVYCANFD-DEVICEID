@@ -1,37 +1,37 @@
 #!/usr/bin/env python3
 """
-PCAN Device ID Tool
-用于查看和修改 PCAN USB 设备的 DEVICE ID (32位)
+SavvyCANFD Device ID Tool
+A Python tool for viewing and modifying SavvyCANFD USB device DEVICE ID (32-bit)
 
-功能:
-- 列出所有连接的 PCAN 设备
-- 查看当前设备的 DEVICE ID (支持十六进制显示)
-- 修改设备的 DEVICE ID (0 - 0xFFFFFFFF)
+Features:
+- List all connected SavvyCANFD devices
+- View current device DEVICE ID (with hex display)
+- Modify device DEVICE ID (0 - 0xFFFFFFFF)
 
-注意:
-- 需要安装 PCAN 驱动 (Windows) 或 pcan 驱动 (Linux)
-- 需要安装 python-can: pip install python-can
-- 修改 DEVICE ID 后需要重新插拔设备或重启才能生效
+Requirements:
+- SavvyCANFD driver (Windows) or pcan driver (Linux)
+- python-can: pip install python-can
 
-作者: Kimi Claw
-日期: 2025
+Note: Replug the device or restart system after modifying DEVICE ID
+
+Author: Kimi Claw
+Date: 2025
 """
 
 import sys
 import argparse
-import re
 from typing import List, Optional, Tuple
 
 try:
     import can
     from can.interfaces.pcan import PcanBus
 except ImportError:
-    print("错误: 未安装 python-can。请运行: pip install python-can")
+    print("Error: python-can not installed. Run: pip install python-can")
     sys.exit(1)
 
 
-# PCAN 通道列表
-PCAN_CHANNELS = [
+# SavvyCANFD channel list
+SAVVYCANFD_CHANNELS = [
     "PCAN_ISABUS1", "PCAN_ISABUS2", "PCAN_ISABUS3", "PCAN_ISABUS4",
     "PCAN_ISABUS5", "PCAN_ISABUS6", "PCAN_ISABUS7", "PCAN_ISABUS8",
     "PCAN_DNGBUS1",
@@ -53,52 +53,52 @@ PCAN_CHANNELS = [
 
 def parse_id(id_str: str) -> int:
     """
-    解析 Device ID 字符串，支持十进制和十六进制
+    Parse Device ID string, supports decimal and hexadecimal
     
-    支持的格式:
-    - 十进制: "123456"
-    - 十六进制: "0x80FF0000", "80FF0000h", "80FF0000H"
+    Supported formats:
+    - Decimal: "123456"
+    - Hex: "0x80FF0000", "80FF0000h", "80FF0000H"
     """
     id_str = id_str.strip()
     
-    # 匹配 0x 开头的十六进制
+    # Hex with 0x prefix
     if id_str.lower().startswith('0x'):
         return int(id_str, 16)
     
-    # 匹配 h/H 结尾的十六进制
+    # Hex with h/H suffix
     if id_str.lower().endswith('h'):
         return int(id_str[:-1], 16)
     
-    # 默认十进制
+    # Default decimal
     return int(id_str)
 
 
 def format_id(device_id: int) -> str:
-    """格式化 Device ID 显示，同时显示十进制和十六进制"""
+    """Format Device ID display, show both decimal and hexadecimal"""
     return f"{device_id} (0x{device_id:08X})"
 
 
-def list_pcan_devices() -> List[Tuple[str, Optional[int], str]]:
+def list_devices() -> List[Tuple[str, Optional[int], str]]:
     """
-    扫描并列出所有可用的 PCAN 设备
+    Scan and list all available SavvyCANFD devices
     
     Returns:
-        列表，每项为 (通道名, 设备ID, 状态描述)
+        List of (channel, device_id, status)
     """
     devices = []
     
-    for channel in PCAN_CHANNELS:
+    for channel in SAVVYCANFD_CHANNELS:
         try:
             bus = PcanBus(channel=channel, bitrate=500000)
             try:
                 device_id = bus.get_device_number()
-                devices.append((channel, device_id, "已连接"))
+                devices.append((channel, device_id, "Connected"))
             except Exception as e:
-                devices.append((channel, None, f"已连接但无法获取ID: {e}"))
+                devices.append((channel, None, f"Connected but no ID: {e}"))
             finally:
                 bus.shutdown()
         except Exception:
-            # 设备不存在或无法访问，跳过
+            # Device not available, skip
             pass
     
     return devices
@@ -106,13 +106,13 @@ def list_pcan_devices() -> List[Tuple[str, Optional[int], str]]:
 
 def get_device_id(channel: str) -> Optional[int]:
     """
-    获取指定 PCAN 通道的 DEVICE ID
+    Get DEVICE ID for specified SavvyCANFD channel
     
     Args:
-        channel: PCAN 通道名 (如 PCAN_USBBUS1)
+        channel: SavvyCANFD channel name (e.g., PCAN_USBBUS1)
         
     Returns:
-        设备 ID，如果失败返回 None
+        Device ID or None if failed
     """
     try:
         bus = PcanBus(channel=channel, bitrate=500000)
@@ -122,23 +122,23 @@ def get_device_id(channel: str) -> Optional[int]:
         finally:
             bus.shutdown()
     except Exception as e:
-        print(f"错误: 无法访问 {channel}: {e}")
+        print(f"Error: Cannot access {channel}: {e}")
         return None
 
 
 def set_device_id(channel: str, device_id: int) -> bool:
     """
-    设置指定 PCAN 通道的 DEVICE ID
+    Set DEVICE ID for specified SavvyCANFD channel
     
     Args:
-        channel: PCAN 通道名 (如 PCAN_USBBUS1)
-        device_id: 新的设备 ID (0 - 0xFFFFFFFF)
+        channel: SavvyCANFD channel name (e.g., PCAN_USBBUS1)
+        device_id: New device ID (0 - 0xFFFFFFFF)
         
     Returns:
-        是否设置成功
+        True if successful
     """
     if not 0 <= device_id <= 0xFFFFFFFF:
-        print(f"错误: 设备 ID 必须在 0 - 0xFFFFFFFF (4294967295) 范围内")
+        print(f"Error: Device ID must be in range 0 - 0xFFFFFFFF (4294967295)")
         return False
     
     try:
@@ -147,30 +147,30 @@ def set_device_id(channel: str, device_id: int) -> bool:
             old_id = bus.get_device_number()
             result = bus.set_device_number(device_id)
             if result:
-                print(f"✓ 成功将 {channel} 的 DEVICE ID 从 {format_id(old_id)} 修改为 {format_id(device_id)}")
-                print("  注意: 请重新插拔设备或重启系统使更改生效")
+                print(f"✓ Successfully changed {channel} DEVICE ID from {format_id(old_id)} to {format_id(device_id)}")
+                print("  Note: Replug the device or restart system for changes to take effect")
                 return True
             else:
-                print(f"✗ 修改 {channel} 的 DEVICE ID 失败")
+                print(f"✗ Failed to set {channel} DEVICE ID")
                 return False
         finally:
             bus.shutdown()
     except Exception as e:
-        print(f"错误: 无法访问 {channel}: {e}")
+        print(f"Error: Cannot access {channel}: {e}")
         return False
 
 
 def find_device_by_id(target_id: int) -> Optional[str]:
     """
-    通过 DEVICE ID 查找对应的 PCAN 通道
+    Find SavvyCANFD channel by DEVICE ID
     
     Args:
-        target_id: 目标设备 ID
+        target_id: Target device ID
         
     Returns:
-        通道名，如果未找到返回 None
+        Channel name or None if not found
     """
-    for channel in PCAN_CHANNELS:
+    for channel in SAVVYCANFD_CHANNELS:
         try:
             bus = PcanBus(channel=channel, bitrate=500000)
             try:
@@ -185,151 +185,151 @@ def find_device_by_id(target_id: int) -> Optional[str]:
 
 
 def interactive_mode():
-    """交互式模式"""
-    print("\n=== PCAN Device ID 管理工具 (32位) ===\n")
+    """Interactive mode"""
+    print("\n=== SavvyCANFD Device ID Tool (32-bit) ===\n")
     
     while True:
-        print("选项:")
-        print("  1. 列出所有 PCAN 设备")
-        print("  2. 查看指定通道的 DEVICE ID")
-        print("  3. 修改指定通道的 DEVICE ID")
-        print("  4. 通过 DEVICE ID 查找设备")
-        print("  5. 退出")
+        print("Options:")
+        print("  1. List all SavvyCANFD devices")
+        print("  2. Get DEVICE ID for channel")
+        print("  3. Set DEVICE ID for channel")
+        print("  4. Find device by DEVICE ID")
+        print("  5. Exit")
         print()
         
-        choice = input("请选择 (1-5): ").strip()
+        choice = input("Select (1-5): ").strip()
         
         if choice == "1":
-            print("\n扫描 PCAN 设备...")
-            devices = list_pcan_devices()
+            print("\nScanning SavvyCANFD devices...")
+            devices = list_devices()
             if devices:
-                print(f"\n找到 {len(devices)} 个设备:")
+                print(f"\nFound {len(devices)} device(s):")
                 print("-" * 60)
-                print(f"{'通道':<20} {'设备ID':<30} {'状态':<20}")
+                print(f"{'Channel':<20} {'Device ID':<30} {'Status':<20}")
                 print("-" * 60)
                 for channel, dev_id, status in devices:
                     id_str = format_id(dev_id) if dev_id is not None else "N/A"
                     print(f"{channel:<20} {id_str:<30} {status:<20}")
                 print("-" * 60)
             else:
-                print("未找到任何 PCAN 设备")
+                print("No SavvyCANFD devices found")
             print()
             
         elif choice == "2":
-            channel = input("请输入通道名 (如 PCAN_USBBUS1): ").strip().upper()
+            channel = input("Enter channel name (e.g., PCAN_USBBUS1): ").strip().upper()
             if channel:
                 device_id = get_device_id(channel)
                 if device_id is not None:
-                    print(f"\n{channel} 的 DEVICE ID: {format_id(device_id)}\n")
+                    print(f"\n{channel} DEVICE ID: {format_id(device_id)}\n")
                 else:
-                    print(f"\n无法获取 {channel} 的 DEVICE ID\n")
+                    print(f"\nCannot get {channel} DEVICE ID\n")
             else:
-                print("通道名不能为空\n")
+                print("Channel name cannot be empty\n")
                 
         elif choice == "3":
-            channel = input("请输入通道名 (如 PCAN_USBBUS1): ").strip().upper()
+            channel = input("Enter channel name (e.g., PCAN_USBBUS1): ").strip().upper()
             if not channel:
-                print("通道名不能为空\n")
+                print("Channel name cannot be empty\n")
                 continue
                 
             current_id = get_device_id(channel)
             if current_id is None:
-                print(f"无法访问 {channel}\n")
+                print(f"Cannot access {channel}\n")
                 continue
                 
-            print(f"当前 DEVICE ID: {format_id(current_id)}")
-            print("支持格式: 十进制(123456) 或 十六进制(0x80FF0000 / 80FF0000h)")
-            new_id_str = input("请输入新的 DEVICE ID: ").strip()
+            print(f"Current DEVICE ID: {format_id(current_id)}")
+            print("Supported formats: decimal(123456) or hex(0x80FF0000 / 80FF0000h)")
+            new_id_str = input("Enter new DEVICE ID: ").strip()
             
             try:
                 new_id = parse_id(new_id_str)
                 if 0 <= new_id <= 0xFFFFFFFF:
-                    confirm = input(f"确认将 {channel} 的 DEVICE ID 从 {format_id(current_id)} 改为 {format_id(new_id)}? (y/n): ").strip().lower()
+                    confirm = input(f"Confirm change {channel} DEVICE ID from {format_id(current_id)} to {format_id(new_id)}? (y/n): ").strip().lower()
                     if confirm == 'y':
                         set_device_id(channel, new_id)
                 else:
-                    print("错误: DEVICE ID 必须在 0 - 0xFFFFFFFF 范围内\n")
+                    print("Error: DEVICE ID must be in range 0 - 0xFFFFFFFF\n")
             except ValueError as e:
-                print(f"错误: 无效的输入格式 - {e}\n")
+                print(f"Error: Invalid input format - {e}\n")
             print()
             
         elif choice == "4":
-            id_str = input("请输入要查找的 DEVICE ID (支持 0x 前缀或 h 后缀): ").strip()
+            id_str = input("Enter DEVICE ID to find (supports 0x prefix or h suffix): ").strip()
             try:
                 target_id = parse_id(id_str)
                 channel = find_device_by_id(target_id)
                 if channel:
-                    print(f"\nDEVICE ID {format_id(target_id)} 对应的通道: {channel}\n")
+                    print(f"\nDEVICE ID {format_id(target_id)} found on channel: {channel}\n")
                 else:
-                    print(f"\n未找到 DEVICE ID 为 {format_id(target_id)} 的设备\n")
+                    print(f"\nNo device found with DEVICE ID {format_id(target_id)}\n")
             except ValueError as e:
-                print(f"错误: 无效的输入格式 - {e}\n")
+                print(f"Error: Invalid input format - {e}\n")
                 
         elif choice == "5":
-            print("再见!")
+            print("Goodbye!")
             break
             
         else:
-            print("无效的选择，请重试\n")
+            print("Invalid choice, please try again\n")
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description='PCAN Device ID 管理工具 (32位)',
+        description='SavvyCANFD Device ID Tool (32-bit)',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
-示例:
-  %(prog)s                           # 交互式模式
-  %(prog)s --list                    # 列出所有设备
-  %(prog)s --get PCAN_USBBUS1        # 查看指定通道的 DEVICE ID
-  %(prog)s --set PCAN_USBBUS1 0x80FF0000  # 修改 DEVICE ID (十六进制)
-  %(prog)s --set PCAN_USBBUS1 2164191232   # 修改 DEVICE ID (十进制)
-  %(prog)s --find 0x80FF0000         # 查找 DEVICE ID 对应的设备
+Examples:
+  %(prog)s                           # Interactive mode
+  %(prog)s --list                    # List all devices
+  %(prog)s --get PCAN_USBBUS1        # Get DEVICE ID for channel
+  %(prog)s --set PCAN_USBBUS1 0x80FF0000  # Set DEVICE ID (hex)
+  %(prog)s --set PCAN_USBBUS1 2164191232   # Set DEVICE ID (decimal)
+  %(prog)s --find 0x80FF0000         # Find device by ID
 
-DEVICE ID 格式支持:
-  - 十进制: 2164191232
-  - 十六进制: 0x80FF0000 或 80FF0000h
+DEVICE ID format support:
+  - Decimal: 2164191232
+  - Hex: 0x80FF0000 or 80FF0000h
         """
     )
     
     parser.add_argument('--list', '-l', action='store_true',
-                        help='列出所有连接的 PCAN 设备')
+                        help='List all connected SavvyCANFD devices')
     parser.add_argument('--get', '-g', metavar='CHANNEL',
-                        help='获取指定通道的 DEVICE ID (如 PCAN_USBBUS1)')
+                        help='Get DEVICE ID for channel (e.g., PCAN_USBBUS1)')
     parser.add_argument('--set', '-s', nargs=2, metavar=('CHANNEL', 'ID'),
-                        help='设置指定通道的 DEVICE ID (支持 0x 前缀或 h 后缀)')
+                        help='Set DEVICE ID for channel (supports 0x prefix or h suffix)')
     parser.add_argument('--find', '-f', metavar='ID',
-                        help='通过 DEVICE ID 查找设备 (支持 0x 前缀或 h 后缀)')
+                        help='Find device by DEVICE ID (supports 0x prefix or h suffix)')
     
     args = parser.parse_args()
     
-    # 如果没有参数，进入交互式模式
+    # If no arguments, enter interactive mode
     if not any([args.list, args.get, args.set, args.find]):
         interactive_mode()
         return
     
-    # 命令行模式
+    # Command line mode
     if args.list:
-        devices = list_pcan_devices()
+        devices = list_devices()
         if devices:
-            print(f"找到 {len(devices)} 个 PCAN 设备:")
+            print(f"Found {len(devices)} SavvyCANFD device(s):")
             print("-" * 60)
-            print(f"{'通道':<20} {'设备ID':<30} {'状态':<20}")
+            print(f"{'Channel':<20} {'Device ID':<30} {'Status':<20}")
             print("-" * 60)
             for channel, dev_id, status in devices:
                 id_str = format_id(dev_id) if dev_id is not None else "N/A"
                 print(f"{channel:<20} {id_str:<30} {status:<20}")
             print("-" * 60)
         else:
-            print("未找到任何 PCAN 设备")
+            print("No SavvyCANFD devices found")
             sys.exit(1)
             
     elif args.get:
         device_id = get_device_id(args.get.upper())
         if device_id is not None:
-            print(f"{args.get.upper()} 的 DEVICE ID: {format_id(device_id)}")
+            print(f"{args.get.upper()} DEVICE ID: {format_id(device_id)}")
         else:
-            print(f"无法获取 {args.get.upper()} 的 DEVICE ID")
+            print(f"Cannot get {args.get.upper()} DEVICE ID")
             sys.exit(1)
             
     elif args.set:
@@ -341,7 +341,7 @@ DEVICE ID 格式支持:
             else:
                 sys.exit(1)
         except ValueError as e:
-            print(f"错误: 无效的 DEVICE ID 格式 '{args.set[1]}': {e}")
+            print(f"Error: Invalid DEVICE ID format '{args.set[1]}': {e}")
             sys.exit(1)
             
     elif args.find:
@@ -349,12 +349,12 @@ DEVICE ID 格式支持:
             target_id = parse_id(args.find)
             channel = find_device_by_id(target_id)
             if channel:
-                print(f"DEVICE ID {format_id(target_id)} 对应的通道: {channel}")
+                print(f"DEVICE ID {format_id(target_id)} found on channel: {channel}")
             else:
-                print(f"未找到 DEVICE ID 为 {format_id(target_id)} 的设备")
+                print(f"No device found with DEVICE ID {format_id(target_id)}")
                 sys.exit(1)
         except ValueError as e:
-            print(f"错误: 无效的 DEVICE ID 格式 '{args.find}': {e}")
+            print(f"Error: Invalid DEVICE ID format '{args.find}': {e}")
             sys.exit(1)
 
 

@@ -1,60 +1,65 @@
 # SavvyCANFD Device ID Tool
 
-用于查看和修改 PCAN USB 设备的 DEVICE ID 的 Python 工具。
+A Python tool for viewing and modifying SavvyCANFD USB device DEVICE ID.
 
-## 功能
+## Features
 
-- 列出所有连接的 PCAN 设备
-- 查看当前设备的 DEVICE ID (32位)
-- 修改设备的 DEVICE ID (0 - 0xFFFFFFFF)
-- 通过 DEVICE ID 查找设备
+- List all connected SavvyCANFD devices
+- View current device DEVICE ID
+- Modify device DEVICE ID (0 - 0xFFFFFFFF)
+- Find device by DEVICE ID
 
-## 依赖
+## Requirements
 
 ```bash
 pip install python-can
 ```
 
-## 平台支持
+## Platform Support
 
-- **Windows**: 需要安装 [PEAK PCAN 驱动](https://www.peak-system.com/PCAN-USB.199.0.html)
-- **Linux**: 需要安装 `pcan` 驱动模块
+- **Windows**: Requires [SavvyCANFD Driver](https://www.peak-system.com/PCAN-USB.199.0.html)
+- **Linux**: Requires `pcan` driver module
 
-## 使用方法
+## Usage
 
-### 交互式模式
+### Interactive Mode
 ```bash
-python pcan_device_id.py
+python savvycanfd_device_id.py
 ```
 
-### 命令行模式
+### Command Line Mode
 
-**列出所有设备：**
+**List all devices:**
 ```bash
-python pcan_device_id.py --list
+python savvycanfd_device_id.py --list
 ```
 
-**查看 DEVICE ID：**
+**Get DEVICE ID:**
 ```bash
-python pcan_device_id.py --get PCAN_USBBUS1
+python savvycanfd_device_id.py --get PCAN_USBBUS1
 ```
 
-**修改 DEVICE ID（支持十六进制）：**
+**Set DEVICE ID (hex):**
 ```bash
-python pcan_device_id.py --set PCAN_USBBUS1 0x80FF0000
-python pcan_device_id.py --set PCAN_USBBUS1 2164191232
+python savvycanfd_device_id.py --set PCAN_USBBUS1 0x80FF0000
 ```
 
-**通过 ID 查找设备：**
+**Set DEVICE ID (decimal):**
 ```bash
-python pcan_device_id.py --find 0x80FF0000
+python savvycanfd_device_id.py --set PCAN_USBBUS1 2164191232
 ```
 
-## 注意事项
+**Find device by ID:**
+```bash
+python savvycanfd_device_id.py --find 0x80FF0000
+```
 
-- DEVICE ID 范围为 0 - 0xFFFFFFFF (32位)
-- 修改 DEVICE ID 后需要重新插拔设备或重启系统才能生效
-- 支持多种输入格式：`0x80FF0000`、`80FF0000h`、十进制 `2164191232`
+## Notes
+
+- DEVICE ID range: 0 - 0xFFFFFFFF (32-bit)
+- Replug the device or restart system after modifying DEVICE ID
+- Supports hex format: `0x80FF0000` or `80FF0000h`
+- Supports decimal format: `2164191232`
 
 ## License
 
