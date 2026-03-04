@@ -8,6 +8,7 @@ A Python tool for viewing and modifying SavvyCANFD USB device DEVICE ID.
 - View current device DEVICE ID
 - Modify device DEVICE ID (0 - 0xFFFFFFFF)
 - Find device by DEVICE ID
+- **NEW: PyQt6 GUI version for easy operation**
 
 
 ## Requirements
@@ -16,11 +17,26 @@ A Python tool for viewing and modifying SavvyCANFD USB device DEVICE ID.
 pip install python-can
 ```
 
+For GUI version:
+```bash
+pip install PyQt6 python-can
+```
+
 ## Usage
 
-### Windows - SavvyCANFD Mode
+### GUI Version (Recommended)
 
-For PCAN-USB hardware using PEAK driver.
+```bash
+python savvycanfd_gui.py
+```
+
+Features:
+- Visual device list with auto-scan
+- One-click ID read/write
+- Input validation and confirmation dialogs
+- Operation log display
+
+### CLI Version
 
 **Interactive Mode:**
 ```bash
@@ -63,6 +79,28 @@ python savvycanfd_device_id.py --find 0x80FF0000
 
 ## Files
 
-- `savvycanfd_device_id.py` - Windows/SavvyCANFD driver mode
+- `savvycanfd_device_id.py` - CLI version
+- `savvycanfd_gui.py` - PyQt6 GUI version
 
 
+## Screenshots
+
+GUI Layout:
+```
+┌────────────────────────────────────────────────────────┐
+│ SavvyCANFD Device ID Tool                              │
+├──────────────────────────┬─────────────────────────────┤
+│ Connected Devices        │ Device Info                 │
+│ ┌────────────────────┐   │ Channel: PCAN_USBBUS1       │
+│ │ Channel   │ ID     │   │ Current ID: 2164191232      │
+│ ├────────────────────┤   │ (0x80FF0000)                │
+│ │PCAN_USBBUS1│0x80..│   ├─────────────────────────────┤
+│ │PCAN_USBBUS2│N/A   │   │ [Get Device ID]             │
+│ └────────────────────┘   │ Channel: [PCAN_USBBUS1 ]    │
+│ [🔄 Scan Devices]        │ [📖 Get ID]                 │
+│                          ├─────────────────────────────┤
+│                          │ [Set Device ID]             │
+│                          │ New ID: [0x80FF0000    ]    │
+│                          │ [✏️ Set ID]                  │
+└──────────────────────────┴─────────────────────────────┘
+```
